@@ -1,4 +1,7 @@
 # SEEA EA Toolkit (QGIS plugin)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22282872.svg)](https://doi.org/10.5281/zenodo.22282872) 
+
+
 
 Two QGIS Processing algorithms, both reading the same raster time
 series, that together build a UN SEEA Ecosystem Accounting extent
