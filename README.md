@@ -37,15 +37,15 @@ under **Installed**.
 ## 1. SEEA Extent Account + Change Matrix
 
 Outputs three CSVs:
-- **Flat extent table** — one row per (year, class_name, area_ha).
-- **SEEA EA extent account** — Table 4.1 layout, chained across every
+- **Flat extent table** : one row per (year, class_name, area_ha).
+- **SEEA EA extent account** : Table 4.1 layout, chained across every
   consecutive period: Opening extent / Additions / Reductions / Net
   change in extent / Closing extent, by ecosystem type + Total.
-- **Change matrix** — From x To cross-tabulation per consecutive
+- **Change matrix** : From x To cross-tabulation per consecutive
   period, in hectares, with Opening/Closing margins.
 
 Additions/Reductions and the change matrix come directly from
-pixel-level from/to comparisons between each consecutive raster pair —
+pixel-level from/to comparisons between each consecutive raster pair :
 the natural approach for purely observed maps. Opening + Net change =
 Closing exactly for every class.
 
@@ -56,13 +56,13 @@ Closing exactly for every class.
 **Scope**: this builds the *supply side by ecosystem type* of the
 SEEA EA physical/monetary ecosystem service flow accounts, plus the
 monetary ecosystem asset account. It does **not** build the industry
-*use* side ("Agriculture / Forestry / Fisheries / ...") — that needs
+*use* side ("Agriculture / Forestry / Fisheries / ...") : that needs
 economic survey data with no relationship to a land-cover raster.
 
 ### If you already use strategicc/ST-Sim: reuse your existing files
 
 This algorithm's two extra inputs are **strategicc's own established
-schemas**, not something new to author — `accounting/csv_loader.py`'s
+schemas**, not something new to author : `accounting/csv_loader.py`'s
 `EcosystemServices.csv` and `AssetValuationParams.csv`. If you already
 maintain a strategicc project, point the algorithm at the same files.
 
@@ -74,13 +74,13 @@ Forest,Wood Provisioning,Provisioning,210000,IDR,m3,3.5
 Cropland,Crop Provisioning,Provisioning,20000,IDR,tonnes,2.5
 ```
 
-- `ValuePerUnitArea` — monetary value **per hectare per year** (Mode A),
+- `ValuePerUnitArea` : monetary value **per hectare per year** (Mode A),
   or with `PhysicalUnit`/`PhysicalValuePerUnitArea` also given (Mode B),
   an independent physical quantity per hectare alongside it. Both are
   always hectare-denominated, exactly as in strategicc.
 - `ServiceType` must be `Provisioning`, `Regulating`, or `Cultural`.
 - **Mode C** (`StockFlowSource`, physical quantity sourced from a
-  simulated stock/flow run) **is not supported** — there's no
+  simulated stock/flow run) **is not supported** : there's no
   simulated stock/flow log for purely observed rasters. Mode C rows
   are skipped with a warning.
 - `UserType`/`UserShare` columns are accepted (so a file used
@@ -96,7 +96,7 @@ Cropland,Crop Provisioning,Provisioning,20000,IDR,tonnes,2.5
   type/service, for that year.
 
 Neither `ValuePerUnitArea` nor `PhysicalValuePerUnitArea` can be
-derived from a classified raster — they're estimates you supply.
+derived from a classified raster : they're estimates you supply.
 
 #### AssetValuationParams.csv (optional)
 
@@ -131,22 +131,22 @@ closed form for `PriceGrowthRate > 0`.
 
 ### Outputs (four CSVs)
 
-- **Physical flow account** — extent_ha × PhysicalValuePerUnitArea,
-  per (year, ecosystem_type, service) — only for services with a
+- **Physical flow account** : extent_ha × PhysicalValuePerUnitArea,
+  per (year, ecosystem_type, service), only for services with a
   physical figure (Mode B).
-- **Monetary flow account** — extent_ha × ValuePerUnitArea, per (year,
+- **Monetary flow account** : extent_ha × ValuePerUnitArea, per (year,
   ecosystem_type, service), plus TOTAL rows per ecosystem type and per
   year.
-- **NPV by ecosystem type** — total service value, discount rate,
+- **NPV by ecosystem type** : total service value, discount rate,
   asset life, price growth rate, and NPV per (year, ecosystem_type),
-  plus TOTAL rows — mirrors strategicc's own NPV granularity (NPV is
+  plus TOTAL rows, mirrors strategicc's own NPV granularity (NPV is
   computed once per class per year off the *total* service value, not
   per service, exactly as `monetary_asset_account_seea()` does).
-- **Monetary asset account** — SEEA EA Table 10.1 layout, chained
+- **Monetary asset account** : SEEA EA Table 10.1 layout, chained
   across every consecutive period: Opening value / Ecosystem
   enhancement / Ecosystem degradation / Ecosystem conversions
   (additions, reductions) / Other changes in volume (catastrophic
-  losses, reappraisals — always 0, see below) / Revaluations / Net
+  losses, reappraisals, always 0, see below) / Revaluations / Net
   change in value / Closing value, by ecosystem type + Total, plus a
   Check row confirming everything reconciles exactly.
 
@@ -160,13 +160,13 @@ exactly, with the differences documented in
   service value for the class, per the formula above.
 - **Ecosystem conversions**: Additions valued at the class's per-area
   value in the period's *closing* year; Reductions at its per-area
-  value in the *opening* year — matching SEEA EA's own requirement
+  value in the *opening* year, matching SEEA EA's own requirement
   that these align with the physical extent account. Additions/
   Reductions themselves come from this plugin's own pixel-level
   extent comparison (same numbers as algorithm 1's extent account),
-  not a simulated transition log — there isn't one for observed-only
+  not a simulated transition log, there isn't one for observed-only
   data.
-- **Revaluations**: isolates the pure price-growth contribution —
+- **Revaluations**: isolates the pure price-growth contribution,
   NPV at `PriceGrowthRate` minus NPV of the same annual value at 0
   growth. Zero whenever `PriceGrowthRate` is 0.
 - **Ecosystem enhancement/degradation**: the *residual* needed so Net
@@ -175,7 +175,7 @@ exactly, with the differences documented in
   This is a documented approximation, not SEEA EA's condition-attributed
   split — that needs a compiled condition account this plugin doesn't
   have, the same limitation strategicc itself documents.
-- **Catastrophic losses / Reappraisals**: always reported as 0 —
+- **Catastrophic losses / Reappraisals**: always reported as 0,
   honestly absent rather than silently omitted, since there's no
   transition-group classification or methodology-change mechanism
   available here (strategicc takes the same stance for Reappraisals).
