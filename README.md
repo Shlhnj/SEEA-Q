@@ -88,7 +88,7 @@ Cropland,Crop Provisioning,Provisioning,20000,IDR,tonnes,2.5
   effect here, since this plugin doesn't build a use table.
 - **Plugin extension**: an optional `Year` column. strategicc's own
   files have no year dimension (one valuation table per whole
-  simulation run) — add `Year` here if your rates/prices should change
+  simulation run), add `Year` here if your rates/prices should change
   across your observed years. Leave the column out entirely (or leave
   a cell blank) to broadcast a row across every year, matching
   strategicc's native static behaviour. A row with an explicit `Year`
@@ -173,7 +173,7 @@ exactly, with the differences documented in
   change in value reconciles exactly with Closing − Opening
   (Enhancement = `max(residual, 0)`, Degradation = `min(residual, 0)`).
   This is a documented approximation, not SEEA EA's condition-attributed
-  split — that needs a compiled condition account this plugin doesn't
+  split, that needs a compiled condition account this plugin doesn't
   have, the same limitation strategicc itself documents.
 - **Catastrophic losses / Reappraisals**: always reported as 0,
   honestly absent rather than silently omitted, since there's no
