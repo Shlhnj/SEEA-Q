@@ -17,6 +17,6 @@ repository=https://github.com/Shlhnj/SEEA-Q
 ; category=Analysis
 tags=seea,seeaq,ecosystem accounting,extent account,change matrix,ecosystem services,flow account,asset account,npv,land cover,vector,raster,time series
 hasProcessingProvider=yes
-experimental=True
+experimental=False
 deprecated=False
 server=False
