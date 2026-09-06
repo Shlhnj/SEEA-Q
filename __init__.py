@@ -1,5 +1,5 @@
 """
-SEEA EA Toolkit
+SEEAQ: SEEA EA Toolkit plugin for QGIS
 ---------------
 QGIS plugin adding a Processing provider with algorithms to build
 UN SEEA Ecosystem Accounting extent accounts and change matrices from
@@ -12,5 +12,5 @@ Plugins > Manage and Install Plugins > Install from ZIP.
 
 
 def classFactory(iface):
-    from .plugin import SeeaEaToolkitPlugin
-    return SeeaEaToolkitPlugin(iface)
+    from .mainPlugin import SeeaqPlugin
+    return SeeaqPlugin(iface)
