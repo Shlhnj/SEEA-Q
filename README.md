@@ -5,9 +5,11 @@
 ![GitHub License](https://img.shields.io/github/license/Shlhnj/SEEA-Q)
 ![GitHub repo size](https://img.shields.io/github/repo-size/Shlhnj/SEEA-Q)
 
-See the plugin page at https://plugins.qgis.org/plugins/seeaq/
+See the QGIS plugin page at https://plugins.qgis.org/plugins/seeaq/
 
-Repository: https://github.com/Shlhnj/SEEAQ.
+Github Repository: https://github.com/Shlhnj/SEEAQ.
+
+United Nations SEEA-EA Documents: https://seea.un.org/sites/default/files/documents/EA/seea_ea_f124_web_12dec24.pdf
 
 Two QGIS Processing algorithms, both reading the same raster time
 series, that together build a UN SEEA Ecosystem Accounting extent
