@@ -5,7 +5,7 @@ from .algorithms.extent_table import SeeaExtentAlgorithm
 from .algorithms.flows_assets import SeeaFlowsAssetsAlgorithm
 
 
-class SeeaEaProvider(QgsProcessingProvider):
+class SeeaqProvider(QgsProcessingProvider):
 
     def id(self):
         return "seeaq"
