@@ -1,5 +1,8 @@
 # SEEA EA Toolkit (QGIS plugin)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22282872.svg)](https://doi.org/10.5281/zenodo.22282872) 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22282872.svg)](https://doi.org/10.5281/zenodo.22282872)
+![GitHub Release](https://img.shields.io/github/v/release/Shlhnj/strategicc)
+![GitHub License](https://img.shields.io/github/license/Shlhnj/strategicc)
+![GitHub repo size](https://img.shields.io/github/repo-size/Shlhnj/strategicc)
 
 Taken from a subset of modules from https://github.com/Shlhnj/strategicc
 
