@@ -4,7 +4,7 @@ try:
 except ImportError:
     from qgis.PyQt.QtGui import QAction  # Qt6-based QGIS
 
-from .provider import SeeaEaProvider
+from .provider import SeeaqProvider
 
 
 class SeeaqPlugin:
