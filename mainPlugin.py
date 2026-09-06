@@ -7,7 +7,7 @@ except ImportError:
 from .provider import SeeaEaProvider
 
 
-class SeeaEaToolkitPlugin:
+class SeeaqPlugin:
     """
     Registers the SEEA EA Processing provider with QGIS, and adds a
     "SEEA EA Toolkit" submenu under the Plugins menu with one entry per
@@ -25,7 +25,7 @@ class SeeaEaToolkitPlugin:
         self.actions = []
 
     def initGui(self):
-        self.provider = SeeaEaProvider()
+        self.provider = SeeaqProvider()
         QgsApplication.processingRegistry().addProvider(self.provider)
 
         self._add_menu_action(
