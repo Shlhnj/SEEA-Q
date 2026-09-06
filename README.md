@@ -1,6 +1,7 @@
 # SEEA-Q (QGIS plugin)
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22282872.svg)](https://doi.org/10.5281/zenodo.22282872)
+[![Static Badge](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.22282872-purple.svg?zenodo)](https://doi.org/10.5281/zenodo.22282872)
+
 ![GitHub Release](https://img.shields.io/github/v/release/Shlhnj/SEEA-Q)
 ![GitHub License](https://img.shields.io/github/license/Shlhnj/SEEA-Q)
 ![GitHub repo size](https://img.shields.io/github/repo-size/Shlhnj/SEEA-Q)
