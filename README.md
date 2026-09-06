@@ -6,6 +6,7 @@
 ![GitHub repo size](https://img.shields.io/github/repo-size/Shlhnj/SEEA-Q)
 
 See the plugin page at https://plugins.qgis.org/plugins/seeaq/
+
 Repository: https://github.com/Shlhnj/SEEAQ.
 
 Two QGIS Processing algorithms, both reading the same raster time
