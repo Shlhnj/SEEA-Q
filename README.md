@@ -112,6 +112,8 @@ economic survey data with no relationship to a land-cover raster.
 
 ### If you already use strategicc/ST-Sim: reuse your existing files
 
+(companion plugin: **strategiccq** for STSM simulation).
+
 This algorithm's two extra inputs are **strategicc's own established
 schemas**, not something new to author: `accounting/csv_loader.py`'s
 `EcosystemServices.csv` and `AssetValuationParams.csv`. If you already
@@ -244,4 +246,4 @@ exactly, with the differences documented in
   against a simulated stock trajectory. This plugin has no simulated
   stock data, so the column is accepted but does nothing.
 
-  (companion plugin: **strategiccq** for STSM simulation).
+  
