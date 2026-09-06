@@ -3,7 +3,7 @@
 name=SEEA-Q
 email=muhammad.shulhanj@gmail.com
 author=Shulhan
-version= 1.0
+version= 1.0.0
 qgisMinimumVersion=3.0
 description=Generates SEEA Ecosystem Accounting extent, physical/monetary flow, and asset accounts from two or more time-series ecosystem type layers - rasters, vector polygon layers, or a mix.
 homepage=https://github.com/Shlhnj/SEEA-Q/tree/main
