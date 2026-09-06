@@ -1,15 +1,21 @@
 [general]
-name=SEEA EA Toolkit
-qgisMinimumVersion=3.16
-description=Generates SEEA Ecosystem Accounting extent, physical/monetary flow, and asset accounts from two or more time-series ecosystem type rasters. No third-party Python package required.
-version=0.5
-author=Custom build
-email=noreply@example.com
 
-about=Two Processing algorithms from a shared raster time series (classified ecosystem-type rasters, one per year, read entirely with QGIS's own raster provider - no rasterio, no GDAL Python bindings, no third-party package needed beyond numpy which QGIS already ships). (1) Extent account + change matrix (SEEA EA Table 4.1 layout), derived directly from pixel-level comparisons between consecutive rasters. (2) Physical and monetary ecosystem service flow accounts (supply side, by ecosystem type) plus a monetary ecosystem asset account (SEEA EA Table 10.1 style: Opening value / Enhancement / Degradation / Conversions / Revaluations / Closing value, reconciling exactly), reusing the strategicc package's own established EcosystemServices.csv and AssetValuationParams.csv schemas and NPV methodology - if you already maintain a strategicc/ST-Sim project you can point this at the same files. See README.md for schemas and usage.
+name=SEEA-Q
+email=muhammad.shulhanj@gmail.com
+author=Shulhan
+version= 0.1
+qgisMinimumVersion=3.0
+description=Generates SEEA Ecosystem Accounting extent, physical/monetary flow, and asset accounts from two or more time-series ecosystem type layers - rasters, vector polygon layers, or a mix.
+homepage=https://github.com/Shlhnj/SEEA-Q/tree/main
+tracker=https://github.com/Shlhnj/SEEA-Q/issues
 
-category=Analysis
-tags=seea,ecosystem accounting,extent account,change matrix,ecosystem services,flow account,asset account,npv,land cover,time series
+about=SEEAQ: two Processing algorithms from a shared time series of classified ecosystem-type layers - rasters, vector polygon layers, or a mix. Rasters are read entirely with QGIS's own raster provider; vector layers are rasterized onto a common grid via QGIS's own bundled GDAL (the "gdal:rasterize" Processing algorithm - not a new Python dependency, no rasterio, no GDAL Python bindings, no third-party package needed beyond numpy which QGIS already ships) before the same accounting math runs. (1) Extent account + change matrix (SEEA EA Table 4.1 layout), derived directly from pixel-level comparisons between consecutive layers. (2) Physical and monetary ecosystem service flow accounts (supply side, by ecosystem type) plus a monetary ecosystem asset account (SEEA EA Table 10.1 style: Opening value / Enhancement / Degradation / Conversions / Revaluations / Closing value, reconciling exactly), reusing the strategicc package's own established EcosystemServices.csv and AssetValuationParams.csv schemas and NPV methodology - if you already maintain a strategicc/ST-Sim project you can point this at the same files. Companion plugin: strategiccq (STSM simulation). Repository: https://github.com/Shlhnj/SEEAQ See README.md for schemas and usage.
+
+repository=https://github.com/Shlhnj/SEEA-Q
+; end of mandatory metadata
+
+; category=Analysis
+tags=seea,seeaq,ecosystem accounting,extent account,change matrix,ecosystem services,flow account,asset account,npv,land cover,vector,raster,time series
 hasProcessingProvider=yes
 experimental=True
 deprecated=False

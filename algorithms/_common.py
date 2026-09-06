@@ -9,11 +9,14 @@ import csv
 
 from qgis.core import (
     Qgis,
+    QgsProcessing,
     QgsProcessingException,
     QgsProject,
     QgsDistanceArea,
     QgsRectangle,
     QgsGeometry,
+    QgsRasterLayer,
+    QgsVectorLayer,
 )
 
 
@@ -241,3 +244,131 @@ def additions_reductions_ha(arr0, arr1, classes, px_area_ha):
             additions[classes[t_id].name] += area
 
     return additions, reductions
+
+
+# ── Vector layer support: rasterize onto a common grid ──────────────────────
+# Both algorithms accept a mix of raster AND vector polygon layers in one
+# input list. Vector layers are rasterized here (via QGIS's own bundled
+# GDAL, through the "gdal:rasterize" Processing algorithm -- not a new
+# Python dependency, the same GDAL that already backs QGIS's own vector/
+# raster I/O) onto a shared grid, then handed to the existing raster
+# pipeline unchanged. This keeps exactly one tested code path for the
+# actual accounting math, regardless of which formats came in.
+
+def _is_raster(layer):
+    return isinstance(layer, QgsRasterLayer)
+
+
+def _is_vector(layer):
+    return isinstance(layer, QgsVectorLayer)
+
+
+def resolve_mixed_layers_to_rasters(layers, id_field, pixel_size, feedback):
+    """
+    Given a list of QgsMapLayer (raster and/or vector polygon, any
+    order), return an all-raster list of the same length/order:
+    raster layers pass through unchanged; vector layers are rasterized
+    onto a shared grid.
+
+    Grid choice: if any input is a raster, the FIRST raster layer's
+    CRS/extent/resolution is the reference grid every vector layer is
+    burned onto (so it lines up pixel-for-pixel with your real data).
+    If every input is a vector layer, `pixel_size` (map units, e.g.
+    degrees or metres depending on CRS) is required, and the reference
+    extent is the union of every vector layer's own extent.
+
+    `id_field` is the attribute field (integer, matching StateClasses.csv's
+    Id column and the pixel-value convention every raster in this plugin
+    uses) burned into the output raster for each vector layer.
+    """
+    if not any(_is_vector(l) for l in layers):
+        return list(layers)  # nothing to do -- pure raster input, unchanged
+
+    if not id_field:
+        raise QgsProcessingException(
+            "One or more inputs is a vector layer, so the ecosystem type "
+            "ID field (matching StateClasses.csv's Id column) is required."
+        )
+
+    reference_raster = next((l for l in layers if _is_raster(l)), None)
+
+    if reference_raster is not None:
+        ref_crs = reference_raster.crs()
+        ref_extent = reference_raster.extent()
+        ref_width = reference_raster.width()
+        ref_height = reference_raster.height()
+    else:
+        if not pixel_size or pixel_size <= 0:
+            raise QgsProcessingException(
+                "All inputs are vector layers, so a pixel size (map units) "
+                "is required to rasterize them -- none of the layers has "
+                "an existing grid to match."
+            )
+        vector_layers = [l for l in layers if _is_vector(l)]
+        ref_crs = vector_layers[0].crs()
+        ref_extent = QgsRectangle(vector_layers[0].extent())
+        for l in vector_layers[1:]:
+            if l.crs() != ref_crs:
+                feedback.pushWarning(
+                    f"'{l.name()}' CRS ({l.crs().authid()}) differs from "
+                    f"'{vector_layers[0].name()}'s ({ref_crs.authid()}) - "
+                    "extents are being combined without reprojection; "
+                    "reproject all vector layers to the same CRS first."
+                )
+            ref_extent.combineExtentWith(l.extent())
+        ref_width = max(1, int(round(ref_extent.width() / pixel_size)))
+        ref_height = max(1, int(round(ref_extent.height() / pixel_size)))
+
+    # Validate every vector layer's field upfront, before importing
+    # `processing` or doing any rasterization work, so a typo'd field
+    # name fails fast with a clear message.
+    for layer in layers:
+        if _is_vector(layer) and layer.fields().indexFromName(id_field) < 0:
+            raise QgsProcessingException(
+                f"'{layer.name()}' has no field named '{id_field}' - set the "
+                "ecosystem type ID field to match a real attribute column."
+            )
+
+    import os
+    import tempfile
+    import processing
+
+    extent_str = (
+        f"{ref_extent.xMinimum()},{ref_extent.xMaximum()},"
+        f"{ref_extent.yMinimum()},{ref_extent.yMaximum()} [{ref_crs.authid()}]"
+    )
+
+    resolved = []
+    for layer in layers:
+        if _is_raster(layer):
+            resolved.append(layer)
+            continue
+        if not _is_vector(layer):
+            raise QgsProcessingException(f"'{layer.name()}' is neither a raster nor a vector layer.")
+
+        feedback.pushInfo(f"Rasterizing '{layer.name()}' onto the reference grid ({ref_width}x{ref_height})...")
+        out_path = os.path.join(tempfile.gettempdir(), f"seeaq_rasterized_{id(layer)}.tif")
+        processing.run("gdal:rasterize", {
+            "INPUT": layer,
+            "FIELD": id_field,
+            "BURN": 0,
+            "USE_Z": False,
+            "UNITS": 0,  # 0 = georeferenced units (width/height below), not pixel counts
+            "WIDTH": ref_width,
+            "HEIGHT": ref_height,
+            "EXTENT": extent_str,
+            "NODATA": 0,
+            "OPTIONS": "",
+            "DATA_TYPE": 1,  # Byte
+            "INIT": None,
+            "INVERT": False,
+            "EXTRA": "",
+            "OUTPUT": out_path,
+        })
+
+        rlayer = QgsRasterLayer(out_path, f"{layer.name()} (rasterized)")
+        if not rlayer.isValid():
+            raise QgsProcessingException(f"Rasterizing '{layer.name()}' failed - output raster is invalid.")
+        resolved.append(rlayer)
+
+    return resolved

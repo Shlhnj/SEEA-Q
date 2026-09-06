@@ -8,10 +8,10 @@ from .algorithms.flows_assets import SeeaFlowsAssetsAlgorithm
 class SeeaEaProvider(QgsProcessingProvider):
 
     def id(self):
-        return "seea_ea"
+        return "seeaq"
 
     def name(self):
-        return "SEEA EA Toolkit"
+        return "SEEAQ"
 
     def icon(self):
         return QIcon()

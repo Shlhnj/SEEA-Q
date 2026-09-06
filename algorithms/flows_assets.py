@@ -56,6 +56,7 @@ which collapses to the familiar finite annuity annual_value *
 import csv
 
 from qgis.core import (
+    QgsProcessing,
     QgsProcessingAlgorithm,
     QgsProcessingParameterMultipleLayers,
     QgsProcessingParameterFile,
@@ -67,7 +68,7 @@ from qgis.core import (
 
 from ._common import (
     load_state_classes, read_raster_series, parse_years,
-    extent_by_class_ha, additions_reductions_ha,
+    extent_by_class_ha, additions_reductions_ha, resolve_mixed_layers_to_rasters,
 )
 
 VALID_SERVICE_TYPES = {"Provisioning", "Regulating", "Cultural"}
@@ -256,6 +257,8 @@ class SeeaFlowsAssetsAlgorithm(QgsProcessingAlgorithm):
     STATE_CLASSES_CSV = "STATE_CLASSES_CSV"
     YEARS = "YEARS"
     PIXEL_AREA_HA = "PIXEL_AREA_HA"
+    VECTOR_ID_FIELD = "VECTOR_ID_FIELD"
+    VECTOR_PIXEL_SIZE = "VECTOR_PIXEL_SIZE"
     ECOSYSTEM_SERVICES_CSV = "ECOSYSTEM_SERVICES_CSV"
     ASSET_VALUATION_PARAMS_CSV = "ASSET_VALUATION_PARAMS_CSV"
     ASSET_LIFE_YEARS = "ASSET_LIFE_YEARS"
@@ -269,20 +272,22 @@ class SeeaFlowsAssetsAlgorithm(QgsProcessingAlgorithm):
         return "seea_flows_assets"
 
     def displayName(self):
-        return "2. SEEA Ecosystem Service Flow + Asset Account (2+ raster layers)"
+        return "2. SEEA Ecosystem Service Flow + Asset Account (2+ raster or vector layers)"
 
     def group(self):
-        return "SEEA EA Toolkit"
+        return "SEEAQ"
 
     def groupId(self):
-        return "seea_ea"
+        return "seeaq"
 
     def shortHelpString(self):
         return (
             "Builds SEEA EA physical and monetary ecosystem service flow "
             "accounts (supply side, by ecosystem type) and a monetary "
             "ecosystem asset account (NPV-based, SEEA EA Table 10.1 style), "
-            "from two or more classified ecosystem-type rasters plus "
+            "from two or more classified ecosystem-type layers -- rasters, "
+            "vector polygon layers, or a mix (vector layers are rasterized "
+            "onto a common grid via QGIS's own bundled GDAL first) -- plus "
             "strategicc's own EcosystemServices.csv and "
             "AssetValuationParams.csv schemas -- if you already maintain a "
             "strategicc/ST-Sim project, point this at the same files. Mode C "
@@ -297,8 +302,27 @@ class SeeaFlowsAssetsAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterMultipleLayers(
                 self.INPUT_RASTERS,
-                "Classified ecosystem-type rasters, in chronological order (2 or more)",
-                layerType=3,  # QgsProcessing.TypeRaster
+                "Classified ecosystem-type layers, in chronological order "
+                "(2 or more) - rasters, vector polygons, or a mix",
+                layerType=QgsProcessing.TypeMapLayer,
+            )
+        )
+        self.addParameter(
+            QgsProcessingParameterString(
+                self.VECTOR_ID_FIELD,
+                "Ecosystem type ID field (only needed if any input is a "
+                "vector layer - integer field matching StateClasses.csv's Id)",
+                defaultValue="", optional=True,
+            )
+        )
+        self.addParameter(
+            QgsProcessingParameterNumber(
+                self.VECTOR_PIXEL_SIZE,
+                "Pixel size for rasterizing vector layers, map units (only "
+                "needed if EVERY input is a vector layer - if at least one "
+                "raster is included, its own resolution is used instead)",
+                type=QgsProcessingParameterNumber.Double,
+                defaultValue=0.0, minValue=0.0, optional=True,
             )
         )
         self.addParameter(
@@ -399,8 +423,12 @@ class SeeaFlowsAssetsAlgorithm(QgsProcessingAlgorithm):
         layers = self.parameterAsLayerList(parameters, self.INPUT_RASTERS, context)
         if len(layers) < 2:
             raise QgsProcessingException(
-                "Provide at least two classified ecosystem-type rasters (one per year)."
+                "Provide at least two classified ecosystem-type layers (one per year)."
             )
+
+        vector_id_field = self.parameterAsString(parameters, self.VECTOR_ID_FIELD, context).strip()
+        vector_pixel_size = self.parameterAsDouble(parameters, self.VECTOR_PIXEL_SIZE, context)
+        layers = resolve_mixed_layers_to_rasters(layers, vector_id_field, vector_pixel_size, feedback)
 
         classes = load_state_classes(self.parameterAsFile(parameters, self.STATE_CLASSES_CSV, context))
         valid_names = {sc.name for sc in classes.values()}

@@ -1,7 +1,11 @@
 """
 SEEA EA extent account + change matrix, from two or more classified
-ecosystem-type rasters (one per point in time). Fully self-contained --
-see algorithms/_common.py for the shared QGIS-native raster reading.
+ecosystem-type layers (one per point in time) -- rasters, vector
+polygon layers, or a mix of both. Fully self-contained -- see
+algorithms/_common.py for the shared QGIS-native raster reading and
+the vector-to-raster resolution step (vector layers are rasterized
+onto a common grid via QGIS's own bundled GDAL, then handed to the
+same tested raster pipeline as everything else).
 
 Outputs:
   1) Flat extent table       - one row per (year, class_name, area_ha)
@@ -19,6 +23,7 @@ Outputs:
 import csv
 
 from qgis.core import (
+    QgsProcessing,
     QgsProcessingAlgorithm,
     QgsProcessingParameterMultipleLayers,
     QgsProcessingParameterFile,
@@ -28,7 +33,10 @@ from qgis.core import (
     QgsProcessingException,
 )
 
-from ._common import load_state_classes, read_raster_series, parse_years, additions_reductions_ha
+from ._common import (
+    load_state_classes, read_raster_series, parse_years, additions_reductions_ha,
+    resolve_mixed_layers_to_rasters,
+)
 
 
 class SeeaExtentAlgorithm(QgsProcessingAlgorithm):
@@ -37,6 +45,8 @@ class SeeaExtentAlgorithm(QgsProcessingAlgorithm):
     STATE_CLASSES_CSV = "STATE_CLASSES_CSV"
     YEARS = "YEARS"
     PIXEL_AREA_HA = "PIXEL_AREA_HA"
+    VECTOR_ID_FIELD = "VECTOR_ID_FIELD"
+    VECTOR_PIXEL_SIZE = "VECTOR_PIXEL_SIZE"
     OUTPUT_FLAT = "OUTPUT_FLAT"
     OUTPUT_SEEA = "OUTPUT_SEEA"
     OUTPUT_CHANGE_MATRIX = "OUTPUT_CHANGE_MATRIX"
@@ -45,24 +55,27 @@ class SeeaExtentAlgorithm(QgsProcessingAlgorithm):
         return "seea_extent"
 
     def displayName(self):
-        return "1. SEEA Extent Account + Change Matrix (2+ raster layers)"
+        return "1. SEEA Extent Account + Change Matrix (2+ raster or vector layers)"
 
     def group(self):
-        return "SEEA EA Toolkit"
+        return "SEEAQ"
 
     def groupId(self):
-        return "seea_ea"
+        return "seeaq"
 
     def shortHelpString(self):
         return (
             "Builds a SEEA EA extent account and change matrix from two or "
-            "more classified ecosystem-type rasters (one per year). Fully "
-            "self-contained -- rasters are read with QGIS's own raster "
-            "provider (any format QGIS can open) and no third-party "
-            "package needs installing. Requires a StateClasses.csv "
-            "(ST-Sim schema) mapping the raster pixel values to "
-            "ecosystem type names. All rasters must share the same "
-            "grid/CRS/resolution."
+            "more classified ecosystem-type layers (one per year) -- "
+            "rasters, vector polygon layers, or a mix. Rasters are read "
+            "with QGIS's own raster provider (any format QGIS can open); "
+            "vector layers are rasterized onto a common grid via QGIS's "
+            "own bundled GDAL (not a new dependency) before the same "
+            "accounting math runs. Requires a StateClasses.csv (ST-Sim "
+            "schema) mapping pixel values / vector attribute values to "
+            "ecosystem type names. All raster layers must share the same "
+            "grid/CRS/resolution; if any vector layers are included, set "
+            "the ID field they share with StateClasses.csv."
         )
 
     def createInstance(self):
@@ -72,8 +85,27 @@ class SeeaExtentAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterMultipleLayers(
                 self.INPUT_RASTERS,
-                "Classified ecosystem-type rasters, in chronological order (2 or more)",
-                layerType=3,  # QgsProcessing.TypeRaster
+                "Classified ecosystem-type layers, in chronological order "
+                "(2 or more) - rasters, vector polygons, or a mix",
+                layerType=QgsProcessing.TypeMapLayer,
+            )
+        )
+        self.addParameter(
+            QgsProcessingParameterString(
+                self.VECTOR_ID_FIELD,
+                "Ecosystem type ID field (only needed if any input is a "
+                "vector layer - integer field matching StateClasses.csv's Id)",
+                defaultValue="", optional=True,
+            )
+        )
+        self.addParameter(
+            QgsProcessingParameterNumber(
+                self.VECTOR_PIXEL_SIZE,
+                "Pixel size for rasterizing vector layers, map units (only "
+                "needed if EVERY input is a vector layer - if at least one "
+                "raster is included, its own resolution is used instead)",
+                type=QgsProcessingParameterNumber.Double,
+                defaultValue=0.0, minValue=0.0, optional=True,
             )
         )
         self.addParameter(
@@ -130,8 +162,12 @@ class SeeaExtentAlgorithm(QgsProcessingAlgorithm):
         layers = self.parameterAsLayerList(parameters, self.INPUT_RASTERS, context)
         if len(layers) < 2:
             raise QgsProcessingException(
-                "Provide at least two classified ecosystem-type rasters (one per year)."
+                "Provide at least two classified ecosystem-type layers (one per year)."
             )
+
+        vector_id_field = self.parameterAsString(parameters, self.VECTOR_ID_FIELD, context).strip()
+        vector_pixel_size = self.parameterAsDouble(parameters, self.VECTOR_PIXEL_SIZE, context)
+        layers = resolve_mixed_layers_to_rasters(layers, vector_id_field, vector_pixel_size, feedback)
 
         csv_path = self.parameterAsFile(parameters, self.STATE_CLASSES_CSV, context)
         classes = load_state_classes(csv_path)
