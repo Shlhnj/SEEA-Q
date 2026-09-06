@@ -5,7 +5,9 @@
 ![GitHub License](https://img.shields.io/github/license/Shlhnj/SEEA-Q)
 ![GitHub repo size](https://img.shields.io/github/repo-size/Shlhnj/SEEA-Q)
 
-Repository: https://github.com/Shlhnj/SEEAQ (companion plugin: **strategiccq** for STSM simulation).
+See the plugin page at https://plugins.qgis.org/plugins/seeaq/
+Repository: https://github.com/Shlhnj/SEEAQ.
+
 Two QGIS Processing algorithms, both reading the same raster time
 series, that together build a UN SEEA Ecosystem Accounting extent
 account, change matrix, physical/monetary flow accounts, and a
@@ -238,3 +240,5 @@ exactly, with the differences documented in
   warning on the enhancement/degradation split's sign, comparing it
   against a simulated stock trajectory. This plugin has no simulated
   stock data, so the column is accepted but does nothing.
+
+  (companion plugin: **strategiccq** for STSM simulation).
